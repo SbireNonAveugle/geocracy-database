@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Geocracy donné secrète</title>
+<title>Geocracy Information Secrète</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
@@ -48,8 +48,6 @@
   .badge-blue { background: #1a365d; color: #90cdf4; }
   .badge-green { background: #1c4532; color: #9ae6b4; }
   .badge-gray { background: #2d3748; color: #a0aec0; }
-  .btn-del { cursor: pointer; color: #718096; background: none; border: none; padding: 3px 7px; border-radius: 6px; font-size: 14px; width: auto; }
-  .btn-del:hover { color: #fc8181; background: #742a2a33; }
   .empty { text-align: center; padding: 2.5rem; color: #4a5568; font-size: 14px; }
   .search-bar { margin-bottom: 1rem; }
   .loader { text-align: center; padding: 1rem; color: #718096; font-size: 13px; }
@@ -65,7 +63,7 @@
 
 <header>
   <div>
-    <h1>⚔️ Geocracy Intel</h1>
+    <h1>⚔️ Geocracy Information Secrète</h1>
     <span id="conn-status"><span class="dot off" id="dot"></span><span id="conn-txt">Connexion...</span></span>
   </div>
 </header>
@@ -124,9 +122,8 @@
           <th>Rang</th>
           <th>Nb villes</th>
           <th>Villes connues</th>
-          <th></th>
         </tr></thead>
-        <tbody id="tbody"><tr><td colspan="6" class="loader">Chargement...</td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="5" class="loader">Chargement...</td></tr></tbody>
       </table>
     </div>
     <button class="secondary" onclick="exporter()" style="margin-bottom:1rem">⬇ Télécharger Excel</button>
@@ -237,15 +234,6 @@ async function ajouterClassement() {
   }
 }
 
-async function supprimerJoueur(id, nom) {
-  if (!confirm('Supprimer ' + nom + ' ?')) return;
-  try {
-    await api('DELETE', 'joueurs?id=eq.' + id, null);
-    charger();
-    majStats();
-  } catch(e) { alert('Erreur : ' + e.message); }
-}
-
 function filtrer() {
   var q = nrm(document.getElementById('search').value);
   var filtered = allData.filter(function(j) {
@@ -257,7 +245,7 @@ function filtrer() {
 function rafraichir(data) {
   var tbody = document.getElementById('tbody');
   if (!data || !data.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune donnée trouvée</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune donnée trouvée</td></tr>';
     return;
   }
   tbody.innerHTML = data.map(function(j) {
@@ -271,7 +259,6 @@ function rafraichir(data) {
       '<td style="text-align:center">' + rangTxt + '</td>' +
       '<td style="text-align:center">' + nbVTxt + '</td>' +
       '<td style="color:#a0aec0;font-size:12px">' + villesTxt + '</td>' +
-      '<td><button class="btn-del" onclick="supprimerJoueur(\'' + j.id + '\',\'' + j.nom + '\')">🗑</button></td>' +
       '</tr>';
   }).join('');
 }
