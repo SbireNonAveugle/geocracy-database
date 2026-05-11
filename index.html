@@ -329,13 +329,25 @@ async function majStats() {
   } catch(e) {}
 }
 
-async function geocoder(ville) {
+async function getCommune(ville) {
   try {
-    var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(ville + ', France') + '&format=json&limit=1', {
-      headers: { 'Accept-Language': 'fr', 'User-Agent': 'GeoracyIntel/1.0' }
-    });
+    // Search for the commune and get its OSM id
+    var res = await fetch(
+      'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(ville + ', France') +
+      '&format=json&limit=5&addressdetails=1&polygon_geojson=1',
+      { headers: { 'Accept-Language': 'fr' } }
+    );
     var data = await res.json();
-    if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    // Prefer results that are administrative boundaries (communes)
+    var best = data.find(function(d) {
+      return d.geojson && (d.geojson.type === 'Polygon' || d.geojson.type === 'MultiPolygon') &&
+        (d.type === 'administrative' || d.addresstype === 'municipality' || d.addresstype === 'village' || d.addresstype === 'town' || d.addresstype === 'city' || d.class === 'boundary');
+    }) || data.find(function(d) {
+      return d.geojson && (d.geojson.type === 'Polygon' || d.geojson.type === 'MultiPolygon');
+    });
+    if (best) return { geojson: best.geojson, lat: parseFloat(best.lat), lng: parseFloat(best.lon), nom: best.display_name.split(',')[0] };
+    // Fallback: just a point
+    if (data.length > 0) return { geojson: null, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), nom: data[0].display_name.split(',')[0] };
   } catch(e) {}
   return null;
 }
@@ -347,6 +359,7 @@ async function initCarte() {
       attribution: '© OpenStreetMap © CartoDB', maxZoom: 18
     }).addTo(mapObj);
   }
+  // Remove old layers
   mapMarkers.forEach(function(m){ mapObj.removeLayer(m); });
   mapMarkers = [];
   allianceColors = {};
@@ -363,32 +376,54 @@ async function initCarte() {
     });
   });
 
+  var found = 0;
   for (var i = 0; i < toProcess.length; i++) {
     var item = toProcess[i];
-    loadingEl.textContent = '📍 Géolocalisation de ' + item.ville + '... (' + (i+1) + '/' + toProcess.length + ')';
-    var coords = await geocoder(item.ville);
-    if (!coords) { await new Promise(function(r){ setTimeout(r, 250); }); continue; }
+    loadingEl.textContent = '📍 Chargement de ' + item.ville + '... (' + (i+1) + '/' + toProcess.length + ')';
+    var result = await getCommune(item.ville);
+    if (!result) { await new Promise(function(r){ setTimeout(r, 300); }); continue; }
+
     var j = item.joueur;
     var color = getAllianceColor(j.alliance);
-    var icon = L.divIcon({
-      className: '',
-      html: '<div style="width:13px;height:13px;border-radius:50%;background:' + color + ';border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.5)"></div>',
-      iconSize: [13,13], iconAnchor: [6,6]
-    });
-    var popup = '<div style="font-family:system-ui;min-width:140px">' +
+
+    var popup = '<div style="font-family:system-ui;min-width:150px">' +
       '<b style="color:' + color + ';font-size:14px">' + j.nom + '</b>' +
       (j.alliance ? ' <span style="font-size:11px;background:#2d3748;color:#e2e8f0;padding:1px 6px;border-radius:4px">' + j.alliance + '</span>' : '') +
       '<br><span style="font-size:12px;color:#aaa">📍 ' + item.ville + '</span>' +
       (j.rang ? '<br><span style="font-size:12px">🏆 Rang : <b>' + j.rang + '</b></span>' : '') +
       (j.nb_villes ? '<br><span style="font-size:12px">🏠 Villes : <b>' + j.nb_villes + '</b></span>' : '') +
       '</div>';
-    var marker = L.marker([coords.lat, coords.lng], { icon: icon }).bindPopup(popup);
-    marker.addTo(mapObj);
-    mapMarkers.push(marker);
-    await new Promise(function(r){ setTimeout(r, 250); });
+
+    if (result.geojson) {
+      // Draw the commune polygon
+      var layer = L.geoJSON(result.geojson, {
+        style: {
+          color: color,
+          weight: 2,
+          opacity: 0.9,
+          fillColor: color,
+          fillOpacity: 0.35
+        }
+      }).bindPopup(popup);
+      layer.addTo(mapObj);
+      mapMarkers.push(layer);
+    } else {
+      // Fallback: circle marker
+      var circle = L.circleMarker([result.lat, result.lng], {
+        radius: 10,
+        color: color,
+        weight: 2,
+        fillColor: color,
+        fillOpacity: 0.5
+      }).bindPopup(popup);
+      circle.addTo(mapObj);
+      mapMarkers.push(circle);
+    }
+    found++;
+    await new Promise(function(r){ setTimeout(r, 300); });
   }
 
-  loadingEl.textContent = '✓ ' + mapMarkers.length + ' ville(s) affichée(s) sur la carte.';
+  loadingEl.textContent = '✓ ' + found + ' ville(s) affichée(s) sur la carte.';
 
   Object.keys(allianceColors).sort().forEach(function(a) {
     var item = document.createElement('div');
@@ -397,7 +432,7 @@ async function initCarte() {
     legendEl.appendChild(item);
   });
   if (!Object.keys(allianceColors).length) {
-    legendEl.innerHTML = '<span style="color:#718096;font-size:13px">Ajoute des alliances pour voir la légende</span>';
+    legendEl.innerHTML = '<span style="color:#718096;font-size:13px">Ajoute des alliances pour voir les couleurs</span>';
   }
 }
 
