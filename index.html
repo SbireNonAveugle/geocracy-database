@@ -150,10 +150,7 @@
   <div id="tab-rage" class="panel">
     <div class="card">
       <h3>Signaler une ville en rage de survie ❤️</h3>
-      <div class="grid2">
-        <div class="field"><label>Ville</label><input type="text" id="r-ville" placeholder="ex: Woustviller" /></div>
-        <div class="field"><label>Joueur</label><input type="text" id="r-joueur" placeholder="ex: SbireNonAveugle" /></div>
-      </div>
+      <div class="field"><label>Ville</label><input type="text" id="r-ville" placeholder="ex: Woustviller" /></div>
       <button onclick="ajouterRage()">+ Signaler en rage de survie</button>
       <div class="toast" id="toast-r"></div>
     </div>
@@ -494,13 +491,22 @@ function chargerRage() {
 
 function ajouterRage() {
   var ville = document.getElementById('r-ville').value.trim();
-  var joueur = document.getElementById('r-joueur').value.trim();
-  if (!ville || !joueur) { toastRage('Remplis les deux champs.', 'warn'); return; }
-  api('POST', 'rage', { ville: ville, joueur: joueur, date_signalement: new Date().toISOString(), nb_semaines: 0 })
+  if (!ville) { toastRage('Entre le nom de la ville.', 'warn'); return; }
+  // Chercher si la ville est connue dans la BDD
+  var joueurTrouve = '';
+  allData.forEach(function(j) {
+    if (!j.villes) return;
+    j.villes.split(',').forEach(function(v) {
+      if (nrm(v.trim()) === nrm(ville)) joueurTrouve = j.nom;
+    });
+  });
+  api('POST', 'rage', { ville: ville, joueur: joueurTrouve, date_signalement: new Date().toISOString(), nb_semaines: 0 })
     .then(function() {
       document.getElementById('r-ville').value = '';
-      document.getElementById('r-joueur').value = '';
-      toastRage('✓ ' + ville + ' (' + joueur + ') signalée en rage de survie !', 'ok');
+      var msg = joueurTrouve
+        ? '✓ ' + ville + ' signalée — joueur : ' + joueurTrouve
+        : '✓ ' + ville + ' signalée (joueur inconnu)';
+      toastRage(msg, 'ok');
       chargerRage();
     }).catch(function(e) { toastRage('Erreur : ' + e.message, 'err'); });
 }
