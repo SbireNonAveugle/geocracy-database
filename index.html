@@ -59,7 +59,17 @@
   .legend { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; padding: 10px 14px; margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
   .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-  @media (max-width: 600px) {
+  .rage-red { background: #742a2a33; border: 1px solid #fc818155; border-radius: 10px; }
+  .rage-yellow { background: #74421033; border: 1px solid #f6ad5555; border-radius: 10px; }
+  .rage-green { background: #1c453233; border: 1px solid #9ae6b455; border-radius: 10px; }
+  .rage-badge-red { background: #742a2a; color: #fc8181; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .rage-badge-yellow { background: #744210; color: #fbd38d; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .rage-badge-green { background: #1c4532; color: #9ae6b4; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .rage-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .rage-actions { display: flex; gap: 8px; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; border-radius: 6px; }
+  .btn-danger { background: #742a2a; color: #fc8181; }
+  .btn-ok { background: #1c4532; color: #9ae6b4; }
     .grid2 { grid-template-columns: 1fr; }
     .stats { grid-template-columns: 1fr 1fr; }
   }
@@ -87,6 +97,7 @@
     <button class="tab" onclick="switchTab('classement', this)">🏆 Classement</button>
     <button class="tab" onclick="switchTab('liste', this)">📋 Base de données</button>
     <button class="tab" onclick="switchTab('carte', this)">🗺️ Carte</button>
+    <button class="tab" onclick="switchTab('rage', this)">❤️ Rage de survie</button>
   </div>
 
   <div id="tab-marche" class="panel active">
@@ -136,7 +147,18 @@
     <button class="secondary" onclick="exporter()" style="margin-bottom:1rem">⬇ Télécharger Excel</button>
   </div>
 
-  <div id="tab-carte" class="panel">
+  <div id="tab-rage" class="panel">
+    <div class="card">
+      <h3>Signaler une ville en rage de survie ❤️</h3>
+      <div class="grid2">
+        <div class="field"><label>Ville</label><input type="text" id="r-ville" placeholder="ex: Woustviller" /></div>
+        <div class="field"><label>Joueur</label><input type="text" id="r-joueur" placeholder="ex: SbireNonAveugle" /></div>
+      </div>
+      <button onclick="ajouterRage()">+ Signaler en rage de survie</button>
+      <div class="toast" id="toast-r"></div>
+    </div>
+    <div id="rage-list"><div class="empty">Aucune ville en rage de survie signalée.</div></div>
+  </div>
     <p class="map-info">📍 Villes géolocalisées automatiquement. La couleur correspond à l'alliance du joueur.</p>
     <div id="map"></div>
     <p class="map-loading" id="map-loading"></p>
@@ -459,8 +481,119 @@ function exporter() {
   });
 });
 
-majStats();
-charger();
+// ── Rage de survie ────────────────────────────────────────────────────────────
+var rageData = [];
+
+function chargerRage() {
+  api('GET', 'rage?order=date_signalement.asc', null).then(function(data) {
+    rageData = data || [];
+    afficherRage();
+  }).catch(function() {});
+}
+
+function ajouterRage() {
+  var ville = document.getElementById('r-ville').value.trim();
+  var joueur = document.getElementById('r-joueur').value.trim();
+  if (!ville || !joueur) { toastRage('Remplis les deux champs.', 'warn'); return; }
+  api('POST', 'rage', { ville: ville, joueur: joueur, date_signalement: new Date().toISOString(), nb_semaines: 0 })
+    .then(function() {
+      document.getElementById('r-ville').value = '';
+      document.getElementById('r-joueur').value = '';
+      toastRage('✓ ' + ville + ' (' + joueur + ') signalée en rage de survie !', 'ok');
+      chargerRage();
+    }).catch(function(e) { toastRage('Erreur : ' + e.message, 'err'); });
+}
+
+function toastRage(msg, type) {
+  var t = document.getElementById('toast-r');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(function() { t.className = 'toast'; }, 3500);
+}
+
+function joursDepuis(dateStr) {
+  var diff = new Date() - new Date(dateStr);
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function prochainCheck(dateStr, nbSemaines) {
+  var base = new Date(dateStr);
+  base.setDate(base.getDate() + (nbSemaines + 1) * 7);
+  var diff = base - new Date();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function confirmerRage(id) {
+  // Still in rage - reset weekly counter
+  var item = rageData.find(function(r) { return r.id === id; });
+  if (!item) return;
+  api('PATCH', 'rage?id=eq.' + id, { nb_semaines: (item.nb_semaines || 0) + 1, date_signalement: item.date_signalement })
+    .then(function() { chargerRage(); });
+}
+
+function supprimerRage(id) {
+  if (!confirm('Supprimer cette ville de la liste rage de survie ?')) return;
+  api('DELETE', 'rage?id=eq.' + id, null).then(function() { chargerRage(); });
+}
+
+function afficherRage() {
+  var container = document.getElementById('rage-list');
+  if (!rageData.length) {
+    container.innerHTML = '<div class="empty">Aucune ville en rage de survie signalée.</div>';
+    return;
+  }
+
+  // Alert banner if any ville is attackable
+  var attaquables = rageData.filter(function(r) { return prochainCheck(r.date_signalement, r.nb_semaines || 0) <= 0; });
+  var banner = '';
+  if (attaquables.length) {
+    banner = '<div style="background:#1c4532;border:1px solid #9ae6b4;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#9ae6b4;font-weight:600;font-size:14px">🟢 ' + attaquables.length + ' ville(s) potentiellement attaquable(s) ! Vérifie maintenant.</div>';
+  }
+
+  var html = banner;
+  rageData.forEach(function(r) {
+    var jours = joursDepuis(r.date_signalement);
+    var restant = prochainCheck(r.date_signalement, r.nb_semaines || 0);
+    var semaines = r.nb_semaines || 0;
+    var classe, badge, msg;
+
+    if (restant <= 0) {
+      classe = 'rage-green';
+      badge = '<span class="rage-badge-green">🟢 À vérifier maintenant !</span>';
+      msg = 'Signalée il y a ' + jours + ' jours — ' + semaines + ' semaine(s) confirmée(s) en rage';
+    } else if (restant <= 3) {
+      classe = 'rage-yellow';
+      badge = '<span class="rage-badge-yellow">🟡 Vérification dans ' + restant + ' jour(s)</span>';
+      msg = 'Signalée il y a ' + jours + ' jours — ' + semaines + ' semaine(s) confirmée(s)';
+    } else {
+      classe = 'rage-red';
+      badge = '<span class="rage-badge-red">🔴 Prochaine vérif dans ' + restant + ' jour(s)</span>';
+      msg = 'Signalée il y a ' + jours + ' jours — ' + semaines + ' semaine(s) confirmée(s)';
+    }
+
+    html += '<div class="rage-card ' + classe + '">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:15px;color:#f6ad55;margin-bottom:4px">📍 ' + r.ville + ' <span style="color:#a0aec0;font-weight:400;font-size:13px">(' + r.joueur + ')</span></div>' +
+        '<div style="font-size:12px;color:#718096;margin-bottom:6px">' + msg + '</div>' +
+        badge +
+      '</div>' +
+      '<div class="rage-actions">' +
+        '<button class="btn-sm btn-ok" onclick="confirmerRage(\'' + r.id + '\')">❤️ Encore en rage</button>' +
+        '<button class="btn-sm btn-danger" onclick="supprimerRage(\'' + r.id + '\')">✓ Capturée</button>' +
+      '</div>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// Override switchTab to load rage data
+var _origSwitchTab = switchTab;
+function switchTab(name, btn) {
+  _origSwitchTab(name, btn);
+  if (name === 'rage') chargerRage();
+}
+
+chargerRage();
 </script>
 </body>
 </html>
