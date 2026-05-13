@@ -223,6 +223,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'liste') charger();
   if (name === 'carte') { charger().then(function(){ setTimeout(initCarte, 400); }); }
+  if (name === 'rage') chargerRage();
 }
 
 async function charger() {
@@ -586,14 +587,10 @@ function afficherRage() {
   container.innerHTML = html;
 }
 
-// Override switchTab to load rage data
-var _origSwitchTab = switchTab;
-function switchTab(name, btn) {
-  _origSwitchTab(name, btn);
-  if (name === 'rage') chargerRage();
-}
-
+majStats();
+charger();
 chargerRage();
+
 </script>
 </body>
 </html>
