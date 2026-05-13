@@ -90,6 +90,7 @@
     <button class="tab" onclick="switchTab('classement', this)">🏆 Classement</button>
     <button class="tab" onclick="switchTab('liste', this)">📋 Base de données</button>
     <button class="tab" onclick="switchTab('rage', this)">❤️ Rage de survie</button>
+    <button class="tab" onclick="switchTab('attaque', this)">⚔️ Villes attaquables</button>
   </div>
 
   <div id="tab-marche" class="panel active">
@@ -149,6 +150,24 @@
     <div id="rage-list"><div class="empty">Aucune ville en rage de survie signalée.</div></div>
   </div>
 
+  <div id="tab-attaque" class="panel">
+    <div class="card">
+      <h3>Signaler une ville attaquable ⚔️</h3>
+      <div class="grid2">
+        <div class="field"><label>Ville</label><input type="text" id="a-ville" placeholder="ex: Gonnehem" oninput="chercherJoueurAttaque()" /></div>
+        <div class="field"><label>Joueur <span id="a-joueur-hint" style="color:#48bb78;font-size:11px"></span></label><input type="text" id="a-joueur" placeholder="Auto-rempli si connu" /></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Soldats attaquants 🗡️</label><input type="number" id="a-soldats" placeholder="ex: 500" min="0" /></div>
+        <div class="field"><label>Défense ennemie 🛡️</label><input type="number" id="a-defense" placeholder="ex: 200" min="0" /></div>
+        <div class="field"><label>Notes</label><input type="text" id="a-notes" placeholder="ex: Frontière nord" /></div>
+      </div>
+      <button onclick="ajouterAttaque()">+ Ajouter ville attaquable</button>
+      <div class="toast" id="toast-a"></div>
+    </div>
+    <div id="attaque-list"><div class="empty">Aucune ville attaquable signalée.</div></div>
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -191,6 +210,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'liste') charger();
   if (name === 'rage') chargerRage();
+  if (name === 'attaque') chargerAttaque();
 }
 
 async function charger() {
@@ -460,9 +480,112 @@ function afficherRage() {
   container.innerHTML = html;
 }
 
+
+// ── Villes attaquables ────────────────────────────────────────────────────────
+var attaqueData = [];
+
+function chercherJoueurAttaque() {
+  var ville = document.getElementById('a-ville').value.trim();
+  var hint = document.getElementById('a-joueur-hint');
+  var found = '';
+  allData.forEach(function(j) {
+    if (!j.villes) return;
+    j.villes.split(',').forEach(function(v) {
+      if (nrm(v.trim()) === nrm(ville)) found = j.nom;
+    });
+  });
+  if (found) {
+    document.getElementById('a-joueur').value = found;
+    hint.textContent = '✓ trouvé';
+  } else {
+    document.getElementById('a-joueur').value = '';
+    hint.textContent = '';
+  }
+}
+
+function ajouterAttaque() {
+  var ville = document.getElementById('a-ville').value.trim();
+  if (!ville) { toastAttaque('Entre le nom de la ville.', 'warn'); return; }
+  var joueur = document.getElementById('a-joueur').value.trim();
+  var soldats = parseInt(document.getElementById('a-soldats').value) || 0;
+  var defense = parseInt(document.getElementById('a-defense').value) || 0;
+  var notes = document.getElementById('a-notes').value.trim();
+  api('POST', 'attaque', {
+    ville: ville, joueur: joueur, soldats: soldats, defense: defense,
+    notes: notes, date_ajout: new Date().toISOString()
+  }).then(function() {
+    document.getElementById('a-ville').value = '';
+    document.getElementById('a-joueur').value = '';
+    document.getElementById('a-soldats').value = '';
+    document.getElementById('a-defense').value = '';
+    document.getElementById('a-notes').value = '';
+    document.getElementById('a-joueur-hint').textContent = '';
+    toastAttaque('✓ ' + ville + ' ajoutée aux cibles !', 'ok');
+    chargerAttaque();
+  }).catch(function(e) { toastAttaque('Erreur : ' + e.message, 'err'); });
+}
+
+function toastAttaque(msg, type) {
+  var t = document.getElementById('toast-a');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(function() { t.className = 'toast'; }, 3500);
+}
+
+function supprimerAttaque(id) {
+  if (!confirm('Retirer cette ville de la liste ?')) return;
+  api('DELETE', 'attaque?id=eq.' + id, null).then(function() { chargerAttaque(); });
+}
+
+function chargerAttaque() {
+  api('GET', 'attaque?order=date_ajout.desc', null).then(function(data) {
+    attaqueData = data || [];
+    afficherAttaque();
+  }).catch(function() {});
+}
+
+function afficherAttaque() {
+  var container = document.getElementById('attaque-list');
+  if (!attaqueData.length) {
+    container.innerHTML = '<div class="empty">Aucune ville attaquable signalée.</div>';
+    return;
+  }
+  var html = '';
+  attaqueData.forEach(function(a) {
+    var joueurTxt = a.joueur ? '<span style="color:#a0aec0">(' + a.joueur + ')</span>' : '<span style="color:#4a5568">(joueur inconnu)</span>';
+    var soldatsTxt = a.soldats ? '🗡️ ' + a.soldats.toLocaleString() + ' soldats' : '';
+    var defenseTxt = a.defense ? '🛡️ ' + a.defense.toLocaleString() + ' défense' : '';
+    var notesTxt = a.notes ? '📝 ' + a.notes : '';
+    var avantage = '';
+    if (a.soldats && a.defense) {
+      if (a.soldats > a.defense) {
+        avantage = '<span style="color:#9ae6b4;font-size:12px;font-weight:600">✅ Avantage attaquant</span>';
+      } else if (a.soldats < a.defense) {
+        avantage = '<span style="color:#fc8181;font-size:12px;font-weight:600">⚠️ Défense supérieure</span>';
+      } else {
+        avantage = '<span style="color:#fbd38d;font-size:12px;font-weight:600">⚖️ Égalité</span>';
+      }
+    }
+    html += '<div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:15px;color:#f6ad55;margin-bottom:4px">⚔️ ' + a.ville + ' ' + joueurTxt + '</div>' +
+        '<div style="font-size:12px;color:#718096;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">' +
+          (soldatsTxt ? '<span>' + soldatsTxt + '</span>' : '') +
+          (defenseTxt ? '<span>' + defenseTxt + '</span>' : '') +
+          (notesTxt ? '<span>' + notesTxt + '</span>' : '') +
+        '</div>' +
+        avantage +
+      '</div>' +
+      '<button class="btn-sm btn-danger" onclick="supprimerAttaque('' + a.id + '')">✓ Conquise</button>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
 majStats();
 charger();
 chargerRage();
+chargerAttaque();
 
 </script>
 </body>
