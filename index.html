@@ -137,6 +137,7 @@
         <tbody id="tbody"><tr><td colspan="5" class="loader">Chargement...</td></tr></tbody>
       </table>
     </div>
+    <button class="secondary" onclick="exporter()" style="margin-bottom:1rem">⬇ Télécharger Excel</button>
   </div>
 
   <div id="tab-rage" class="panel">
@@ -184,18 +185,13 @@ var sortDir = 1;
 
 
 async function api(method, path, body) {
-  var headers = Object.assign({}, HEADERS);
-  if (method === 'POST') headers['Prefer'] = 'return=representation';
-  if (method === 'PATCH') headers['Prefer'] = 'return=minimal';
-  if (method === 'DELETE') headers['Prefer'] = 'return=minimal';
   var res = await fetch(SUPA_URL + '/rest/v1/' + path, {
     method: method,
-    headers: headers,
+    headers: Object.assign({}, HEADERS, { 'Prefer': 'return=representation' }),
     body: body ? JSON.stringify(body) : undefined
   });
   if (!res.ok) throw new Error(await res.text());
-  var txt = await res.text();
-  return txt ? JSON.parse(txt) : [];
+  return res.json();
 }
 
 function nrm(s) { return (s || '').trim().toLowerCase(); }
@@ -222,13 +218,10 @@ async function charger() {
     allData = await api('GET', 'joueurs?order=nom.asc', null);
     document.getElementById('dot').className = 'dot';
     document.getElementById('conn-txt').textContent = 'Connecté';
-    var tbody = document.getElementById('tbody');
-    if (tbody) rafraichir(allData);
+    rafraichir(allData);
   } catch(e) {
-    document.getElementById('dot').className = 'dot off';
     document.getElementById('conn-txt').textContent = 'Erreur de connexion';
-    var tbody = document.getElementById('tbody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty">Impossible de charger les données.</td></tr>';
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="5" class="empty">Impossible de charger les données.</td></tr>';
   }
 }
 
@@ -583,7 +576,7 @@ function afficherAttaque() {
         '</div>' +
         avantage +
       '</div>' +
-      '<button class="btn-sm btn-danger" onclick="supprimerAttaque(\'' + a.id + '\')">✓ Conquise</button>' +
+      '<button class="btn-sm btn-danger" onclick="supprimerAttaque('' + a.id + '')">✓ Conquise</button>' +
     '</div>';
   });
   container.innerHTML = html;
