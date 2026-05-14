@@ -394,7 +394,9 @@ function chargerRage() {
 function ajouterRage() {
   var ville = document.getElementById('r-ville').value.trim();
   if (!ville) { toast('toast-r', 'Entre le nom de la ville.', 'warn'); return; }
-  // BUG FIX: charger allData d'abord si vide
+  // Vérification doublon
+  var dejaPresente = rageData.some(function(r) { return nrm(r.ville) === nrm(ville); });
+  if (dejaPresente) { toast('toast-r', '⚠️ ' + ville + ' est déjà signalée en rage de survie !', 'warn'); return; }
   var joueurTrouve = '';
   allData.forEach(function(j) {
     if (!j.villes) return;
@@ -519,6 +521,9 @@ function chercherJoueurAttaque() {
 function ajouterAttaque() {
   var ville = document.getElementById('a-ville').value.trim();
   if (!ville) { toast('toast-a', 'Entre le nom de la ville.', 'warn'); return; }
+  // Vérification doublon
+  var dejaPresente = attaqueData.some(function(a) { return nrm(a.ville) === nrm(ville); });
+  if (dejaPresente) { toast('toast-a', '⚠️ ' + ville + ' est déjà dans la liste des villes attaquables !', 'warn'); return; }
   var joueur = document.getElementById('a-joueur').value.trim();
   var soldats = parseInt(document.getElementById('a-soldats').value) || 0;
   var defense = parseInt(document.getElementById('a-defense').value) || 0;
