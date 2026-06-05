@@ -150,6 +150,9 @@
       <button onclick="ajouterRage()" style="margin-top:12px">+ Signaler en rage de survie</button>
       <div class="toast" id="toast-r"></div>
     </div>
+    <div class="search-bar">
+      <input type="text" id="search-rage" placeholder="🔍 Rechercher une ville..." oninput="afficherRage()" />
+    </div>
     <div id="rage-list"><div class="empty">Aucune ville en rage de survie signalée.</div></div>
   </div>
 
@@ -446,13 +449,22 @@ function afficherRage() {
     container.innerHTML = '<div class="empty">Aucune ville en rage de survie signalée.</div>';
     return;
   }
-  var attaquables = rageData.filter(function(r) { return prochainCheck(r.date_signalement, r.nb_semaines || 0) <= 0; });
+  var searchEl = document.getElementById('search-rage');
+  var q = searchEl ? nrm(searchEl.value) : '';
+  var liste = rageData.filter(function(r) {
+    return nrm(r.ville).includes(q) || nrm(r.joueur).includes(q);
+  });
+  if (!liste.length) {
+    container.innerHTML = '<div class="empty">Aucune ville trouvée.</div>';
+    return;
+  }
+  var attaquables = liste.filter(function(r) { return prochainCheck(r.date_signalement, r.nb_semaines || 0) <= 0; });
   var banner = '';
   if (attaquables.length) {
     banner = '<div style="background:#1c4532;border:1px solid #9ae6b4;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#9ae6b4;font-weight:600;font-size:14px">🟢 ' + attaquables.length + ' ville(s) potentiellement attaquable(s) ! Vérifie maintenant.</div>';
   }
   var html = banner;
-  rageData.forEach(function(r) {
+  liste.forEach(function(r) {
     var jours = joursDepuis(r.date_signalement);
     var restant = prochainCheck(r.date_signalement, r.nb_semaines || 0);
     var semaines = r.nb_semaines || 0;
