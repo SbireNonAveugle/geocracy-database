@@ -44,14 +44,13 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ambient background glow */
   body::before, body::after {
     content: '';
     position: fixed;
     width: 620px; height: 620px;
     border-radius: 50%;
     filter: blur(140px);
-    opacity: 0.16;
+    opacity: 0.15;
     pointer-events: none;
     z-index: 0;
   }
@@ -59,7 +58,6 @@
   body::after { bottom: -260px; right: -180px; background: var(--purple); }
 
   ::selection { background: var(--gold); color: #1a1408; }
-
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
@@ -67,67 +65,78 @@
 
   header {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(9,11,18,0.72);
+    background: rgba(9,11,18,0.78);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     border-bottom: 1px solid var(--border-soft);
-    padding: 1rem 1.5rem;
-    display: flex; align-items: center; gap: 14px;
+    padding: 0.9rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    flex-wrap: wrap;
   }
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand-icon {
-    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
+    font-size: 19px;
     background: linear-gradient(155deg, #2a2038, #14101f);
     border: 1px solid var(--border);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 14px -6px rgba(240,169,77,0.35);
   }
   header h1 {
     font-family: 'Cinzel', serif;
-    font-size: 19px; font-weight: 700; letter-spacing: 0.02em;
+    font-size: 18px; font-weight: 700; letter-spacing: 0.02em;
     background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #c97d2c);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  header .sub { font-size: 11.5px; color: var(--muted-2); letter-spacing: 0.04em; margin-top: 2px; }
   #conn-status {
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; color: var(--muted); margin-top: 3px;
+    font-size: 11.5px; color: var(--muted); margin-top: 2px;
   }
+  .header-meta { font-size: 11.5px; color: var(--muted-2); text-align: right; }
 
-  .container { max-width: 980px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; position: relative; z-index: 1; }
+  .container { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; position: relative; z-index: 1; }
 
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 1.75rem; }
+  /* ── Stats ── */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
   .stat {
     background: linear-gradient(160deg, var(--panel-2), var(--panel));
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.15rem 1rem;
-    text-align: center;
+    padding: 1rem;
+    display: flex; align-items: center; gap: 12px;
     box-shadow: var(--shadow);
     transition: transform 0.2s ease, border-color 0.2s ease;
   }
   .stat:hover { transform: translateY(-2px); border-color: #3a3f5c; }
+  .stat-icon {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+    background: rgba(240,169,77,0.1); border: 1px solid rgba(240,169,77,0.25);
+  }
   .stat-n {
     font-family: 'Cinzel', serif;
-    font-size: 30px; font-weight: 700;
+    font-size: 24px; font-weight: 700; line-height: 1.1;
     background: linear-gradient(120deg, var(--gold-light), var(--gold));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .stat-l { font-size: 11.5px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-l { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
 
+  /* ── Nav ── */
   .tabs {
-    display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap;
+    display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap;
     background: var(--panel); border: 1px solid var(--border);
     padding: 6px; border-radius: 14px; box-shadow: var(--shadow);
   }
   .tab {
-    flex: 1; padding: 10px 8px; font-size: 12.5px; font-weight: 600;
+    flex: 1; min-width: 96px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 6px 8px; font-size: 11.5px; font-weight: 600;
     cursor: pointer; border-radius: 9px; border: 1px solid transparent;
     background: transparent; color: var(--muted);
-    transition: all 0.18s ease; min-width: 108px;
+    transition: all 0.18s ease;
     font-family: inherit; letter-spacing: 0.01em;
   }
+  .tab .ic { font-size: 17px; line-height: 1; }
   .tab.active {
     background: linear-gradient(155deg, #2a2410, #221c0e);
     color: var(--gold-light);
@@ -139,6 +148,8 @@
   .panel { display: none; animation: fadeIn 0.25s ease; }
   .panel.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .panel-intro { font-size: 12.5px; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
 
   .card {
     background: linear-gradient(160deg, var(--panel-2), var(--panel));
@@ -212,12 +223,26 @@
   .toast.warn { background: rgba(245,207,125,0.12); color: var(--yellow); border-color: rgba(245,207,125,0.3); display: block; }
   .toast.err  { background: rgba(255,138,138,0.12); color: var(--red);    border-color: rgba(255,138,138,0.3); display: block; }
 
+  /* ── Search bar with clear button ── */
+  .search-bar { position: relative; margin-bottom: 0.75rem; }
+  .search-bar input { padding-right: 36px; }
+  .search-clear {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border-radius: 7px; width: auto;
+    background: transparent; color: var(--muted-2); border: none;
+    box-shadow: none; font-size: 15px; cursor: pointer; padding: 0 8px;
+    display: none;
+  }
+  .search-clear.show { display: block; }
+  .search-clear:hover { color: var(--text); background: var(--panel-2); transform: translateY(-50%); }
+  .result-count { font-size: 11.5px; color: var(--muted-2); margin-bottom: 0.9rem; }
+
   .table-wrap {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     overflow-x: auto;
     box-shadow: var(--shadow);
   }
@@ -242,8 +267,8 @@
   }
   .badge-blue { background: rgba(123,184,240,0.15); color: var(--blue); border: 1px solid rgba(123,184,240,0.35); }
 
-  .empty { text-align: center; padding: 3rem 1rem; color: var(--muted-2); font-size: 14px; }
-  .search-bar { margin-bottom: 1rem; }
+  .empty { text-align: center; padding: 2.75rem 1rem; color: var(--muted-2); font-size: 14px; }
+  .empty .empty-ic { font-size: 26px; display: block; margin-bottom: 8px; opacity: 0.6; }
   .loader { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 13px; }
 
   .dot {
@@ -271,12 +296,22 @@
   .btn-ok { background: rgba(127,224,174,0.15); color: var(--green); border: 1px solid rgba(127,224,174,0.3); }
   .btn-ok:hover { background: rgba(127,224,174,0.25); }
 
+  .attack-card {
+    background: linear-gradient(160deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 15px 17px; margin-bottom: 10px;
+    display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+    box-shadow: var(--shadow); transition: transform 0.15s ease;
+  }
+  .attack-card:hover { transform: translateX(2px); }
+
   @media (max-width: 600px) {
     .grid2 { grid-template-columns: 1fr; }
     .grid3 { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: 1fr 1fr; }
-    header h1 { font-size: 16px; }
-    .brand-icon { width: 36px; height: 36px; font-size: 17px; }
+    .stats { grid-template-columns: 1fr; }
+    header h1 { font-size: 15px; }
+    .brand-icon { width: 34px; height: 34px; font-size: 16px; }
+    .tab { min-width: 30%; }
   }
 </style>
 </head>
@@ -290,25 +325,27 @@
       <span id="conn-status"><span class="dot off" id="dot"></span><span id="conn-txt">Connexion...</span></span>
     </div>
   </div>
+  <div class="header-meta" id="header-meta"></div>
 </header>
 
 <div class="container">
 
   <div class="stats">
-    <div class="stat"><div class="stat-n" id="s-j">0</div><div class="stat-l">joueurs</div></div>
-    <div class="stat"><div class="stat-n" id="s-v">0</div><div class="stat-l">villes connues</div></div>
-    <div class="stat"><div class="stat-n" id="s-a">0</div><div class="stat-l">alliances</div></div>
+    <div class="stat"><div class="stat-icon">🧑‍🤝‍🧑</div><div><div class="stat-n" id="s-j">0</div><div class="stat-l">joueurs</div></div></div>
+    <div class="stat"><div class="stat-icon">🏰</div><div><div class="stat-n" id="s-v">0</div><div class="stat-l">villes connues</div></div></div>
+    <div class="stat"><div class="stat-icon">🛡️</div><div><div class="stat-n" id="s-a">0</div><div class="stat-l">alliances</div></div></div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('marche', this)">🛒 Marché</button>
-    <button class="tab" onclick="switchTab('classement', this)">🏆 Classement</button>
-    <button class="tab" onclick="switchTab('liste', this)">📋 Base de données</button>
-    <button class="tab" onclick="switchTab('rage', this)">❤️ Rage de survie</button>
-    <button class="tab" onclick="switchTab('attaque', this)">⚔️ Villes attaquables</button>
+    <button class="tab active" onclick="switchTab('marche', this)"><span class="ic">🛒</span>Marché</button>
+    <button class="tab" onclick="switchTab('classement', this)"><span class="ic">🏆</span>Classement</button>
+    <button class="tab" onclick="switchTab('liste', this)"><span class="ic">📋</span>Base de données</button>
+    <button class="tab" onclick="switchTab('rage', this)"><span class="ic">❤️</span>Rage de survie</button>
+    <button class="tab" onclick="switchTab('attaque', this)"><span class="ic">⚔️</span>Attaquables</button>
   </div>
 
   <div id="tab-marche" class="panel active">
+    <p class="panel-intro">Tu as repéré une ville sur le marché ? Associe-la au joueur qui la possède — si le joueur n'existe pas encore dans la base, il est créé automatiquement.</p>
     <div class="card">
       <h3>Ajouter depuis le marché</h3>
       <div class="grid2">
@@ -321,6 +358,7 @@
   </div>
 
   <div id="tab-classement" class="panel">
+    <p class="panel-intro">Renseigne le rang, l'alliance et le nombre total de villes d'un joueur d'après le classement du royaume. S'il existe déjà, ses infos sont mises à jour.</p>
     <div class="card">
       <h3>Ajouter depuis le classement</h3>
       <div class="grid2">
@@ -337,9 +375,12 @@
   </div>
 
   <div id="tab-liste" class="panel">
+    <p class="panel-intro">Toute la base de renseignements en un coup d'œil. Clique sur une colonne pour trier, ou cherche un joueur / une alliance.</p>
     <div class="search-bar">
       <input type="text" id="search" placeholder="🔍 Rechercher un joueur ou une alliance..." oninput="filtrer()" />
+      <button type="button" class="search-clear" id="search-clear" onclick="viderRecherche()">✕</button>
     </div>
+    <div class="result-count" id="result-count"></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -356,6 +397,7 @@
   </div>
 
   <div id="tab-rage" class="panel">
+    <p class="panel-intro">Suis les villes en <strong>rage de survie</strong> (protégées temporairement). Chaque confirmation repousse d'une semaine la prochaine vérification ; passé ce délai, la ville redevient potentiellement attaquable.</p>
     <div class="card">
       <h3>Signaler une ville en rage de survie ❤️</h3>
       <div class="field"><label>Ville</label><input type="text" id="r-ville" placeholder="ex: Woustviller" /></div>
@@ -364,11 +406,13 @@
     </div>
     <div class="search-bar">
       <input type="text" id="search-rage" placeholder="🔍 Rechercher une ville..." oninput="afficherRage()" />
+      <button type="button" class="search-clear" id="search-rage-clear" onclick="viderRechercheRage()">✕</button>
     </div>
-    <div id="rage-list"><div class="empty">Aucune ville en rage de survie signalée.</div></div>
+    <div id="rage-list"><div class="empty"><span class="empty-ic">❤️</span>Aucune ville en rage de survie signalée.</div></div>
   </div>
 
   <div id="tab-attaque" class="panel">
+    <p class="panel-intro">Note les villes repérées comme cibles, avec vos forces d'attaque estimées face à leur défense. Le nom du joueur se remplit automatiquement si la ville est déjà connue.</p>
     <div class="card">
       <h3>Signaler une ville attaquable ⚔️</h3>
       <div class="grid2">
@@ -383,7 +427,7 @@
       <button onclick="ajouterAttaque()">+ Ajouter ville attaquable</button>
       <div class="toast" id="toast-a"></div>
     </div>
-    <div id="attaque-list"><div class="empty">Aucune ville attaquable signalée.</div></div>
+    <div id="attaque-list"><div class="empty"><span class="empty-ic">⚔️</span>Aucune ville attaquable signalée.</div></div>
   </div>
 
 </div>
@@ -427,7 +471,6 @@ function switchTab(name, btn) {
   if (name === 'attaque') chargerAttaque();
 }
 
-// BUG FIX: getAllianceColor et hexToRgba manquaient complètement
 var allianceColors = {};
 var palette = ['#f0a94d','#7bb8f0','#7fe0ae','#ff8a8a','#b79cf5','#f5cf7d','#6fd8e0','#f299c0','#5fcf94','#6fa8f5'];
 function getAllianceColor(alliance) {
@@ -525,8 +568,15 @@ async function ajouterClassement() {
   } catch(e) { toast('toast-c', 'Erreur : ' + e.message, 'err'); }
 }
 
+function viderRecherche() {
+  document.getElementById('search').value = '';
+  filtrer();
+}
+
 function filtrer() {
-  var q = nrm(document.getElementById('search').value);
+  var val = document.getElementById('search').value;
+  document.getElementById('search-clear').classList.toggle('show', val.length > 0);
+  var q = nrm(val);
   var filtered = allData.filter(function(j) {
     return nrm(j.nom).includes(q) || nrm(j.alliance).includes(q) || nrm(j.villes).includes(q);
   });
@@ -535,10 +585,13 @@ function filtrer() {
 
 function rafraichir(data) {
   var tbody = document.getElementById('tbody');
+  var countEl = document.getElementById('result-count');
   if (!data || !data.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune donnée trouvée</td></tr>';
+    if (countEl) countEl.textContent = '';
     return;
   }
+  if (countEl) countEl.textContent = data.length + ' joueur(s) affiché(s)';
   tbody.innerHTML = data.map(function(j) {
     var color = getAllianceColor(j.alliance);
     var allianceBadge = j.alliance
@@ -568,6 +621,8 @@ async function majStats() {
     document.getElementById('s-j').textContent = data.length;
     document.getElementById('s-v').textContent = totalV;
     document.getElementById('s-a').textContent = alliances.size;
+    var meta = document.getElementById('header-meta');
+    if (meta) meta.textContent = 'Mise à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   } catch(e) {}
 }
 
@@ -609,7 +664,6 @@ function chargerRage() {
 function ajouterRage() {
   var ville = document.getElementById('r-ville').value.trim();
   if (!ville) { toast('toast-r', 'Entre le nom de la ville.', 'warn'); return; }
-  // Vérification doublon
   var dejaPresente = rageData.some(function(r) { return nrm(r.ville) === nrm(ville); });
   if (dejaPresente) { toast('toast-r', '⚠️ ' + ville + ' est déjà signalée en rage de survie !', 'warn'); return; }
   var joueurTrouve = '';
@@ -655,14 +709,20 @@ function supprimerRage(id) {
   api('DELETE', 'rage?id=eq.' + id, null).then(function() { chargerRage(); });
 }
 
+function viderRechercheRage() {
+  document.getElementById('search-rage').value = '';
+  afficherRage();
+}
+
 function afficherRage() {
   var container = document.getElementById('rage-list');
+  var val = document.getElementById('search-rage').value;
+  document.getElementById('search-rage-clear').classList.toggle('show', val.length > 0);
   if (!rageData.length) {
-    container.innerHTML = '<div class="empty">Aucune ville en rage de survie signalée.</div>';
+    container.innerHTML = '<div class="empty"><span class="empty-ic">❤️</span>Aucune ville en rage de survie signalée.</div>';
     return;
   }
-  var searchEl = document.getElementById('search-rage');
-  var q = searchEl ? nrm(searchEl.value) : '';
+  var q = nrm(val);
   var liste = rageData.filter(function(r) {
     return nrm(r.ville).includes(q) || nrm(r.joueur).includes(q);
   });
@@ -694,7 +754,6 @@ function afficherRage() {
       badge = '<span class="rage-badge-red">🔴 Prochaine vérif dans ' + restant + ' jour(s)</span>';
       msg = 'Signalée il y a ' + jours + ' jours — ' + semaines + ' semaine(s) confirmée(s)';
     }
-    // BUG FIX: utiliser data-id + addEventListener plutôt que onclick avec concaténation de guillemets
     html += '<div class="rage-card ' + classe + '" data-id="' + r.id + '">' +
       '<div>' +
         '<div style="font-weight:700;font-size:15px;color:#f0a94d;margin-bottom:4px">📍 ' + r.ville + ' <span style="color:#8b91ab;font-weight:400;font-size:13px">(' + (r.joueur || '?') + ')</span></div>' +
@@ -709,7 +768,6 @@ function afficherRage() {
   });
   container.innerHTML = html;
 
-  // BUG FIX: attacher les événements après injection HTML
   container.querySelectorAll('button[data-action]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.getAttribute('data-id');
@@ -745,7 +803,6 @@ function chercherJoueurAttaque() {
 function ajouterAttaque() {
   var ville = document.getElementById('a-ville').value.trim();
   if (!ville) { toast('toast-a', 'Entre le nom de la ville.', 'warn'); return; }
-  // Vérification doublon
   var dejaPresente = attaqueData.some(function(a) { return nrm(a.ville) === nrm(ville); });
   if (dejaPresente) { toast('toast-a', '⚠️ ' + ville + ' est déjà dans la liste des villes attaquables !', 'warn'); return; }
   var joueur = document.getElementById('a-joueur').value.trim();
@@ -784,7 +841,7 @@ function chargerAttaque() {
 function afficherAttaque() {
   var container = document.getElementById('attaque-list');
   if (!attaqueData.length) {
-    container.innerHTML = '<div class="empty">Aucune ville attaquable signalée.</div>';
+    container.innerHTML = '<div class="empty"><span class="empty-ic">⚔️</span>Aucune ville attaquable signalée.</div>';
     return;
   }
   var html = '';
@@ -801,8 +858,7 @@ function afficherAttaque() {
       else if (a.soldats < a.defense) avantage = '<span style="color:#ff8a8a;font-size:12px;font-weight:700">⚠️ Défense supérieure</span>';
       else avantage = '<span style="color:#f5cf7d;font-size:12px;font-weight:700">⚖️ Égalité</span>';
     }
-    // BUG FIX: utiliser data-id au lieu de guillemets imbriqués dans onclick
-    html += '<div style="background:linear-gradient(160deg,#191d2f,#141726);border:1px solid #262b41;border-radius:12px;padding:15px 17px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;box-shadow:0 10px 30px -12px rgba(0,0,0,0.55)">' +
+    html += '<div class="attack-card">' +
       '<div>' +
         '<div style="font-weight:700;font-size:15px;color:#f0a94d;margin-bottom:4px">⚔️ ' + a.ville + ' ' + joueurTxt + '</div>' +
         '<div style="font-size:12px;color:#8b91ab;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">' +
@@ -817,7 +873,6 @@ function afficherAttaque() {
   });
   container.innerHTML = html;
 
-  // BUG FIX: attacher les événements après injection HTML
   container.querySelectorAll('button[data-action]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.getAttribute('data-id');
@@ -829,7 +884,6 @@ function afficherAttaque() {
 // Chargement initial
 majStats();
 charger().then(function() {
-  // BUG FIX: charger rage/attaque APRÈS allData pour la recherche de joueur
   chargerRage();
   chargerAttaque();
 });
